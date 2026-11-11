@@ -157,7 +157,11 @@
     <div class="cn-filter" role="group" aria-labelledby="cn-filter-label">
       <span class="cn-filter-label" id="cn-filter-label">Sinflar — bir nechtasini tanlash mumkin</span>
       <div class="cn-chips" data-draw="sinf-tanlash" data-source="oquvchilar"></div>
-      <div class="cn-pdf-row"><button type="button" id="cn-pdf" class="cn-pdf">PDF yuklab olish</button><span>Tanlangan sinflar (hech biri tanlanmasa — butun maktab) o'quvchilari ro'yxati natijalari bilan, A4 hisobot ko'rinishida.</span></div>
+    </div>
+    <div class="cn-filter" role="group" aria-labelledby="cn-fan-label">
+      <span class="cn-filter-label" id="cn-fan-label">Fanlar — o'rtacha ball faqat tanlangan fanlar bo'yicha hisoblanadi</span>
+      <div class="cn-chips" data-draw="fan-tanlash" data-source="oquvchilar"></div>
+      <div class="cn-pdf-row"><button type="button" id="cn-pdf" class="cn-pdf">PDF yuklab olish</button><span>Tanlangan sinflar va fanlar bo'yicha o'quvchilar ro'yxati natijalari bilan, A4 hisobot ko'rinishida.</span></div>
     </div>
   </header>
 
@@ -190,14 +194,15 @@
 
   <section class="cn-card" id="etibor">
     <h2>E'tibor kerak: <span data-draw="risk-n" data-source="oquvchilar">—</span></h2>
-    <p class="cn-note">Kamida 3 ta fandan 55 va past ball olgan o'quvchilar. Baho qo'yilmagan fan hisobga olinmaydi. Ismni bosing — kartochkasi ochiladi.</p>
+    <p class="cn-note">Kamida 3 ta fandan 55 va past ball olgan o'quvchilar (3 tadan kam fan tanlansa — tanlangan fanlarning barchasidan). Baho qo'yilmagan fan hisobga olinmaydi. Ismni bosing — kartochkasi ochiladi.</p>
+    <div class="cn-pdf-row" style="margin:0 0 10px"><button type="button" id="cn-risk-pdf" class="cn-pdf">Ro'yxatni PDF yuklab olish</button><span>Tanlangan sinflar va fanlar bo'yicha, "Izoh" ustuni bilan.</span></div>
     <div class="cn-risk" data-draw="risk" data-source="oquvchilar"></div>
   </section>
 
   <section class="cn-card" id="sinflar">
     <h2>Sinflar bo'yicha o'rtacha ball</h2>
     <p class="cn-note">Tanlangan sinflar ajratib ko'rsatiladi; ustunni bosib sinfni qo'shing yoki olib tashlang. Chiziqcha — maktab o'rtachasi.</p>
-    <div class="cn-chart" data-draw="sinf-chart" data-source="sinf_kpi"></div>
+    <div class="cn-chart" data-draw="sinf-chart" data-source="oquvchilar"></div>
   </section>
 
   <section class="cn-card" id="kartochka">
@@ -248,32 +253,31 @@
     fn: (oquvchilar) => oquvchilar.map((r) => ({ id: r.id, ortacha: Math.ceil(Math.round(r.ortacha * 100) / 100) })),
   });
 
-  dash.calc('sinf_kpi', {
-    title: 'Sinflar bo\'yicha o\'rtacha',
-    description: 'Har bir sinf va butun maktab uchun o\'quvchilar o\'rtacha balining o\'rtachasi, yuqoriga yaxlitlangan.',
-    inputs: ['oquvchilar'],
-    fn: (oquvchilar) => {
-      const by = { Maktab: oquvchilar };
-      for (const r of oquvchilar) (by[r.sinf] ??= []).push(r);
-      return Object.entries(by).map(([sinf, rs]) => ({ sinf, oquvchi: rs.length,
-        ortacha: Math.ceil(Math.round(rs.reduce((s, r) => s + r.ortacha, 0) / rs.length * 100) / 100),
-        alo: rs.filter((r) => Math.ceil(Math.round(r.ortacha * 100) / 100) >= 86).length }));
-    },
-  });
-
   const L = d3.formatLocale({ decimal: ',', thousands: ' ', grouping: [3], currency: ['', ''] });
   const pct = L.format('.0%');
   const band = (x) => x >= 86 ? 5 : x >= 71 ? 4 : x >= 56 ? 3 : 2;
-  const SC = window.CN = { sinflar: new Set(), sort: 'ortacha', dir: -1, q: '', hide: false, tanlangan: null };
-  const DRAWS = ['sinf-tanlash', 't-scope', 't-avg', 't-best', 't-worst', 'k-n', 'k-avg', 'k-alo', 'k-alo-ulush', 'k-qon', 'k-qon-ulush', 'fan-chart', 'taqsimot-chart', 'heat', 'risk-n', 'risk', 'sinf-chart', 'kartochka', 'jadval', 't-count'];
+  const SC = window.CN = { sinflar: new Set(), fanlar: new Set(), sort: 'ortacha', dir: -1, q: '', hide: false, tanlangan: null };
+  const has = (v) => v !== null && v !== undefined;
+  const FL = () => SC.fanlar.size ? FANLAR.filter(([k]) => SC.fanlar.has(k)) : FANLAR;
+  const DRAWS = ['sinf-tanlash', 'fan-tanlash','t-scope', 't-avg', 't-best', 't-worst', 'k-n', 'k-avg', 'k-alo', 'k-alo-ulush', 'k-qon', 'k-qon-ulush', 'fan-chart', 'taqsimot-chart', 'heat', 'risk-n', 'risk', 'sinf-chart', 'kartochka', 'jadval', 't-count'];
   const PAST = 55, PAST_FAN = 3;
   const redraw = () => DRAWS.forEach((n) => dash.draw(n));
   const toggle = (s) => { if (SC.sinflar.has(s)) SC.sinflar.delete(s); else SC.sinflar.add(s); redraw(); };
 
-  const allRows = () => { const d = dash.data('oquvchilar'); return d.status === 'ok' ? d.data : null; };
+  // Fan tanlansa, o'quvchining o'rtachasi faqat shu fanlardan qayta hisoblanadi; ulardan bahosi yo'q o'quvchi chiqarib tashlanadi
+  const allRows = () => {
+    const d = dash.data('oquvchilar');
+    if (d.status !== 'ok') return null;
+    if (!SC.fanlar.size) return d.data;
+    return d.data.map((r) => {
+      const v = FL().map(([k]) => r[k]).filter(has);
+      return v.length ? { ...r, ortacha: v.reduce((s, x) => s + x, 0) / v.length } : null;
+    }).filter(Boolean);
+  };
   const scoped = () => { const rs = allRows(); return rs && (SC.sinflar.size ? rs.filter((r) => SC.sinflar.has(r.sinf)) : rs); };
   const avgOf = (vals) => vals.length ? ceil(vals.reduce((s, x) => s + x, 0) / vals.length) : null;
-  const fanAvgs = (rs) => FANLAR.map(([key, fan]) => {
+  const classesOf = (rs) => [...new Set(rs.map((r) => r.sinf))].sort(sinfOrder);
+  const fanAvgs = (rs) => FL().map(([key, fan]) => {
     const v = rs.map((r) => r[key]).filter((x) => x !== null && x !== undefined);
     return { fan, n: v.length, ortacha: avgOf(v) };
   });
@@ -285,10 +289,27 @@
     return { n: rs.length, ortacha: avgOf(rs.map((r) => r.ortacha)), alo: cnt(86, 100), yaxshi: cnt(71, 85), qoniqarli: cnt(56, 70), qoniqarsiz: cnt(0, 55), fanlar: fanAvgs(rs) };
   };
   const scopeName = () => {
-    if (!SC.sinflar.size) return 'Butun maktab';
+    const fans = SC.fanlar.size ? ' (' + FL().map(([, f]) => f).join(', ') + ')' : '';
+    if (!SC.sinflar.size) return 'Butun maktab' + fans;
     const l = [...SC.sinflar].sort(sinfOrder);
-    return (l.length > 4 ? l.slice(0, 4).join(', ') + ' va yana ' + (l.length - 4) + ' ta' : l.join(', ')) + (l.length > 1 ? ' sinflar' : ' sinf');
+    return (l.length > 4 ? l.slice(0, 4).join(', ') + ' va yana ' + (l.length - 4) + ' ta' : l.join(', ')) + (l.length > 1 ? ' sinflar' : ' sinf') + fans;
   };
+
+  dash.draw('fan-tanlash', (box) => {
+    if (!allRows()) { box.replaceChildren(); return; }
+    const mk = (label, pressed, onclick, cls) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.setAttribute('aria-pressed', String(pressed)); b.onclick = onclick;
+      if (cls) b.className = cls; return b;
+    };
+    const flip = (k) => {
+      if (SC.fanlar.has(k)) SC.fanlar.delete(k); else SC.fanlar.add(k);
+      if (SC.fanlar.size === FANLAR.length) SC.fanlar.clear();
+      redraw();
+    };
+    box.replaceChildren(
+      mk('Barcha fanlar', SC.fanlar.size === 0, () => { SC.fanlar.clear(); redraw(); }, 'cn-all'),
+      ...FANLAR.map(([k, f]) => mk(f, SC.fanlar.has(k), () => flip(k))));
+  });
 
   dash.draw('sinf-tanlash', (box) => {
     const rs = allRows();
@@ -392,11 +413,14 @@
   });
 
   dash.draw('sinf-chart', (el) => {
-    const d = dash.data('sinf_kpi');
+    const all = allRows();
     el.querySelectorAll('svg, .cn-tip').forEach((n) => n.remove());
-    if (d.status !== 'ok') return;
-    const school = d.data.find((r) => r.sinf === 'Maktab');
-    const rs = d.data.filter((r) => r.sinf !== 'Maktab').sort((a, b) => sinfOrder(a.sinf, b.sinf));
+    if (!all || !all.length) return;
+    const school = { ortacha: avgOf(all.map((r) => r.ortacha)) };
+    const rs = classesOf(all).map((sinf) => {
+      const g = all.filter((r) => r.sinf === sinf);
+      return { sinf, oquvchi: g.length, ortacha: avgOf(g.map((r) => r.ortacha)), alo: g.filter((r) => ceil(r.ortacha) >= 86).length };
+    });
     const W = el.clientWidth || 400, H = 240, m = { t: 18, r: 8, b: 26, l: 30 };
     const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
     const x = d3.scaleBand(rs.map((r) => r.sinf), [m.l, W - m.r]).padding(0.25);
@@ -423,13 +447,11 @@
       .attr('stroke', 'var(--cds-chart-reference)').attr('stroke-width', 1.5).attr('stroke-dasharray', '4 3').attr('pointer-events', 'none');
   });
 
-  const classesOf = (rs) => [...new Set(rs.map((r) => r.sinf))].sort(sinfOrder);
-
   dash.draw('heat', (el) => {
     const rs = allRows();
     if (!rs) { el.replaceChildren(); return; }
     const classes = SC.sinflar.size ? [...SC.sinflar].sort(sinfOrder) : classesOf(rs);
-    const cols = [...FANLAR.map(([k, f]) => [k, f]), ['ortacha', "O'rtacha"]];
+    const cols = [...FL(), ['ortacha', "O'rtacha"]];
     el.style.gridTemplateColumns = `minmax(3.5rem, auto) repeat(${cols.length}, minmax(4.5rem, 1fr))`;
     const div = (cls, text) => { const d = document.createElement('div'); d.className = cls; d.textContent = text; return d; };
     const cell = (v, extra) => v === null ? div('c cn-hna' + extra, '—') : div('c cn-h' + band(v) + extra, v);
@@ -449,8 +471,9 @@
   const riskRows = () => {
     const rs = scoped();
     if (!rs) return null;
-    return rs.map((r) => ({ r, past: FANLAR.filter(([k]) => r[k] !== null && r[k] !== undefined && r[k] <= PAST) }))
-      .filter((x) => x.past.length >= PAST_FAN)
+    const need = Math.min(PAST_FAN, FL().length);
+    return rs.map((r) => ({ r, past: FL().filter(([k]) => has(r[k]) && r[k] <= PAST) }))
+      .filter((x) => x.past.length >= need)
       .sort((a, b) => b.past.length - a.past.length || a.r.ortacha - b.r.ortacha);
   };
   const choose = (id) => {
@@ -522,14 +545,14 @@
     top.append(left, right);
     el.replaceChildren(top);
 
-    const W = el.clientWidth || 400, rowH = 62, H = FANLAR.length * rowH + 30;
+    const W = el.clientWidth || 400, rowH = 62, H = FL().length * rowH + 30;
     const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('class', 'cn-chart-svg');
     svg.style('overflow', 'visible');
     const probe = svg.append('text').text('Informatika').style('font-size', '12px');
     const lx = probe.node().getComputedTextLength() + 16; probe.remove();
     const x = d3.scaleLinear([0, 100], [lx, W - 40]);
     const t = tip(el);
-    FANLAR.forEach(([k, f], i) => {
+    FL().forEach(([k, f], i) => {
       const g = svg.append('g').attr('transform', `translate(0,${i * rowH})`);
       const v = st[k], ca = clsAvg[i].ortacha, sa = schAvg[i].ortacha;
       g.append('text').attr('x', 0).attr('y', 20).style('fill', 'var(--color-fg)').style('font-size', '12px').text(f);
@@ -566,6 +589,16 @@
   dash.draw('jadval', (tb) => {
     const rs = filtered();
     if (!rs) { tb.replaceChildren(); return; }
+    const shown = new Set(FL().map(([key]) => key));
+    document.querySelectorAll('.cn-table th[data-sort]').forEach((th) => {
+      th.hidden = FANLAR.some(([key]) => key === th.dataset.sort) && !shown.has(th.dataset.sort);
+    });
+    if (FANLAR.some(([key]) => key === SC.sort) && !shown.has(SC.sort)) {
+      SC.sort = 'ortacha'; SC.dir = -1;
+      document.querySelectorAll('.cn-table th[data-sort]').forEach((th) => {
+        if (th.dataset.sort === 'ortacha') th.setAttribute('aria-sort', 'descending'); else th.removeAttribute('aria-sort');
+      });
+    }
     const k = SC.sort;
     rs.sort((a, b) => {
       if (k === 'oquvchi') return SC.dir * a.oquvchi.localeCompare(b.oquvchi, 'uz');
@@ -586,7 +619,7 @@
       clickable(tr, r.id); tr.setAttribute('aria-selected', String(r.id === SC.tanlangan));
       const n = document.createElement('td'); n.textContent = r.oquvchi;
       const s = document.createElement('td'); s.textContent = r.sinf;
-      tr.append(n, s, ...FANLAR.map(([key]) => cell(r[key])), cell(ceil(r.ortacha), true));
+      tr.append(n, s, ...FL().map(([key]) => cell(r[key])), cell(ceil(r.ortacha), true));
       return tr;
     }));
   });
@@ -615,7 +648,7 @@
   window.__REPORT_LOGO = "data:image/png;base64,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";
 // Tanlangan sinflar bo'yicha choraklik hisobot (Chorakli IT hisobotlari uslubida) va uni PDF qilib saqlash
 (function () {
-  const FANS = [['ingliz', 'Ingliz tili'], ['matematika', 'Matematika'], ['informatika', 'Informatika'], ['ona_tili', 'Ona tili']];
+  const ALL = [['ingliz', 'Ingliz tili'], ['matematika', 'Matematika'], ['informatika', 'Informatika'], ['ona_tili', 'Ona tili']];
   const ceil = (x) => Math.ceil(Math.round(x * 100) / 100);
   const has = (v) => v !== null && v !== undefined;
   const avgOf = (v) => v.length ? ceil(v.reduce((s, x) => s + x, 0) / v.length) : null;
@@ -700,7 +733,14 @@ footer { margin-top:10px; padding-top:8px; border-top:1px solid var(--line); fon
 @media screen { body { background:#ecebe6; } .page { background:#fff; margin:24px auto; padding:16mm 15mm; box-shadow:0 2px 12px rgba(0,0,0,.08); } }
 `;
 
-  function build(rows, selected) {
+  function build(rowsIn, selected, fanKeys) {
+    // Fan tanlansa, o'rtacha faqat shu fanlardan qayta hisoblanadi; ulardan bahosi yo'q o'quvchi kirmaydi
+    const FANS = fanKeys && fanKeys.length ? ALL.filter(([k]) => fanKeys.includes(k)) : ALL;
+    const rows = FANS === ALL ? rowsIn : rowsIn.map((r) => {
+      const v = FANS.map(([k]) => r[k]).filter(has);
+      return v.length ? { ...r, ortacha: v.reduce((s, x) => s + x, 0) / v.length } : null;
+    }).filter(Boolean);
+    const fanNote = FANS === ALL ? '' : ' (' + FANS.map(([, nm]) => nm).join(', ') + ')';
     const classes = selected.length ? selected.slice().sort(order) : [...new Set(rows.map((r) => r.sinf))].sort(order);
     const rs = rows.filter((r) => classes.includes(r.sinf));
     const multi = classes.length > 1;
@@ -712,7 +752,7 @@ footer { margin-top:10px; padding-top:8px; border-top:1px solid var(--line); fon
     const fanN = FANS.map(([k]) => rs.filter((r) => has(r[k])).length);
     const mine = fan(rs), school = fan(rows);
     const label = !selected.length ? 'Maktab (2–9-sinflar)' : classes.length > 6 ? classes.length + ' ta sinf' : classes.join(', ') + (multi ? ' sinflar' : ' sinf');
-    const title = !selected.length ? "Maktab o'quvchilarining I chorak baholash natijalari tahlili" : label + " o'quvchilarining I chorak baholash natijalari tahlili";
+    const title = !selected.length ? "Maktab o'quvchilarining I chorak baholash natijalari tahlili" + fanNote : label + " o'quvchilarining I chorak baholash natijalari tahlili" + fanNote;
     const today = new Date();
     const date = String(today.getDate()).padStart(2, '0') + '.' + String(today.getMonth() + 1).padStart(2, '0') + '.' + today.getFullYear();
     const best = Math.max(...av), worst = Math.min(...av);
@@ -751,7 +791,8 @@ footer { margin-top:10px; padding-top:8px; border-top:1px solid var(--line); fon
       }).join('')}</tbody></table>` : '';
     let sec = multi ? 4 : 3;
 
-    const sw = [5, multi ? 27 : 32].concat(multi ? [6] : [], [9, 10, 10, 9, 9, 10, 6]);
+    const rest = (multi ? 6 : 0) + FANS.length * 9.5 + 9 + 10 + 6;
+    const sw = [5, 95 - rest].concat(multi ? [6] : [], FANS.map(() => 9.5), [9, 10, 6]);
     const head = `<tr><th class="c">№</th><th>O'quvchi F.I.Sh.</th>${multi ? '<th class="c">Sinf</th>' : ''}${FANS.map(([, nm]) => `<th class="c">${nm}</th>`).join('')}<th class="c">O'rtacha</th><th class="c">Daraja</th><th class="c">O'rin</th></tr>`;
     const body = roster.map((r, i) => {
       const a = ceil(r.ortacha), [, cls, nm] = level(a);
@@ -767,13 +808,13 @@ footer { margin-top:10px; padding-top:8px; border-top:1px solid var(--line); fon
     const badList = risk.length ? risk.map(({ r, low }) => `<li>${e(short(r.oquvchi))}${multi ? ' (' + e(r.sinf) + ')' : ''} — ${low.map(([k, nm]) => `${nm} <b class="lo">${r[k]}</b>`).join(', ')}</li>`).join('') : '<li class="muted">Bunday o\'quvchi yo\'q</li>';
     const missing = rs.filter((r) => FANS.some(([k]) => !has(r[k]))).length;
 
-    const fileTitle = (selected.length ? (classes.length > 6 ? classes.length + ' ta sinf' : classes.join(', ')) : 'Maktab') + ' - I chorak natijalari';
+    const fileTitle = (selected.length ? (classes.length > 6 ? classes.length + ' ta sinf' : classes.join(', ')) : 'Maktab') + ' - I chorak natijalari' + fanNote;
     const html = `<!doctype html><html lang="uz"><head><meta charset="utf-8"><title>${e(fileTitle)}</title>
 <style>${window.__REPORT_FONTS || ''}${CSS}</style></head><body><div class="page">
 <header><img src="${window.__REPORT_LOGO || ''}" alt="Najot Ta'lim maktabi"><div class="meta">Choraklik baholash natijalari<br>2026–2027 o'quv yili · I chorak</div></header>
 <div class="goldline"></div>
 <h1>${e(title)}</h1>
-<p class="sub">Fanlar: Ingliz tili, Matematika, Informatika, Ona tili · Hisobot sanasi: ${date}</p>
+<p class="sub">Fanlar: ${FANS.map(([, nm]) => nm).join(', ')} · Hisobot sanasi: ${date}</p>
 <div class="info">
   <div><span>${multi ? 'Sinflar' : 'Sinf'}</span>${e(selected.length ? classes.join(', ') : '2–9-sinflar (' + classes.length + ' ta)')}</div>
   <div><span>O'quvchilar soni</span>${n} nafar</div>
@@ -821,11 +862,66 @@ ${heat}
     return { html, fileTitle };
   }
 
-  window.__buildReport = build;
+  // "E'tibor kerak" ro'yxati: dashboarddagi qoida bilan bir xil (kamida 3 ta fandan 55 va past; 3 tadan kam fan tanlansa — barchasidan)
+  function buildRisk(rowsIn, selected, fanKeys) {
+    const FANS = fanKeys && fanKeys.length ? ALL.filter(([k]) => fanKeys.includes(k)) : ALL;
+    const rows = FANS === ALL ? rowsIn : rowsIn.map((r) => {
+      const v = FANS.map(([k]) => r[k]).filter(has);
+      return v.length ? { ...r, ortacha: v.reduce((s, x) => s + x, 0) / v.length } : null;
+    }).filter(Boolean);
+    const fanNote = FANS === ALL ? '' : ' (' + FANS.map(([, nm]) => nm).join(', ') + ')';
+    const classes = selected.length ? selected.slice().sort(order) : [...new Set(rows.map((r) => r.sinf))].sort(order);
+    const rs = rows.filter((r) => classes.includes(r.sinf));
+    const need = Math.min(3, FANS.length);
+    const risk = rs.map((r) => ({ r, low: FANS.filter(([k]) => has(r[k]) && r[k] <= PAST) })).filter((x) => x.low.length >= need)
+      .sort((a, b) => order(a.r.sinf, b.r.sinf) || b.low.length - a.low.length || a.r.ortacha - b.r.ortacha);
+    const multi = classes.length > 1;
+    const label = !selected.length ? 'Maktab (2–9-sinflar)' : classes.length > 6 ? classes.length + ' ta sinf' : classes.join(', ') + (multi ? ' sinflar' : ' sinf');
+    const today = new Date();
+    const date = String(today.getDate()).padStart(2, '0') + '.' + String(today.getMonth() + 1).padStart(2, '0') + '.' + today.getFullYear();
+    const rule = need < 3 ? `tanlangan ${need === 1 ? 'fandan' : 'barcha fanlardan'} 55 va past` : `kamida ${need} ta fandan 55 va past`;
+    const perClass = classes.map((c) => [c, risk.filter((x) => x.r.sinf === c).length, rs.filter((r) => r.sinf === c).length]).filter(([, k]) => k);
 
-  window.__downloadPdf = function () {
-    const sel = [...(window.CN ? window.CN.sinflar : [])];
-    const { html, fileTitle } = build(window.__DATA.oquvchilar, sel);
+    const sw = [4, 100 - (4 + (multi ? 5 : 0) + FANS.length * 8 + 8 + 7 + 13)].concat(multi ? [5] : [], FANS.map(() => 8), [8, 7, 13]);
+    const head = `<tr><th class="c">№</th><th>O'quvchi F.I.Sh.</th>${multi ? '<th class="c">Sinf</th>' : ''}${FANS.map(([, nm]) => `<th class="c">${nm}</th>`).join('')}<th class="c">O'rtacha</th><th class="c">Past fan</th><th>Izoh</th></tr>`;
+    const body = risk.map(({ r, low }, i) => `<tr><td class="c">${i + 1}</td><td>${e(r.oquvchi)}</td>${multi ? `<td class="c">${e(r.sinf)}</td>` : ''}${FANS.map(([k]) => !has(r[k]) ? '<td class="c na">—</td>' : `<td class="c${r[k] <= PAST ? ' low' : ''}">${r[k]}</td>`).join('')}<td class="c"><b>${ceil(r.ortacha)}</b></td><td class="c"><span class="tag lo">${low.length} ta</span></td><td></td></tr>`).join('');
+
+    const fileTitle = (selected.length ? (classes.length > 6 ? classes.length + ' ta sinf' : classes.join(', ')) : 'Maktab') + " - E'tibor kerak" + fanNote;
+    const html = `<!doctype html><html lang="uz"><head><meta charset="utf-8"><title>${e(fileTitle)}</title>
+<style>${window.__REPORT_FONTS || ''}${CSS}</style></head><body><div class="page">
+<header><img src="${window.__REPORT_LOGO || ''}" alt="Najot Ta'lim maktabi"><div class="meta">Choraklik baholash natijalari<br>2026–2027 o'quv yili · I chorak</div></header>
+<div class="goldline"></div>
+<h1>${e(label)}: alohida e'tibor talab qiladigan o'quvchilar${e(fanNote)}</h1>
+<p class="sub">Mezon: ${rule} ball · Hisobot sanasi: ${date}</p>
+<div class="info">
+  <div><span>${multi ? 'Sinflar' : 'Sinf'}</span>${e(selected.length ? classes.join(', ') : '2–9-sinflar (' + classes.length + ' ta)')}</div>
+  <div><span>Ro'yxatda</span>${risk.length} nafar · ${rs.length} tadan ${pct(risk.length, rs.length)}%</div>
+  <div><span>Fanlar</span>${FANS.map(([, nm]) => nm).join(', ')}</div>
+  <div><span>Davr</span>I chorak, noyabr 2026</div>
+</div>
+${multi && perClass.length ? `<h2>Sinflar bo'yicha</h2><div class="legend">${perClass.map(([c, k, t]) => `<span><b>${e(c)}</b>: ${k} nafar (${pct(k, t)}%)</span>`).join('')}</div>` : ''}
+<h2>O'quvchilar ro'yxati <small>(${risk.length} nafar)</small></h2>
+${risk.length ? `<table><colgroup>${sw.map((w) => `<col style="width:${w}%">`).join('')}</colgroup><thead>${head}</thead><tbody>${body}</tbody></table>` : '<p class="muted">Tanlangan sinflarda bunday o\'quvchi yo\'q.</p>'}
+<p class="note">Qizil — 55 va past ball. "—" — baho qo'yilmagan (hisobga olinmaydi). O'rtacha ball yuqoriga yaxlitlangan. "Izoh" ustuni ota-ona bilan suhbat yoki chora-tadbir uchun.</p>
+<div class="avoid">
+<div class="sign">
+  <div>Tayyorladi: Sinf rahbari<b>______________ / ______________________</b></div>
+  <div>Tanishdim: O'quv ishlari bo'yicha direktor o'rinbosari<b>______________ / ______________________</b></div>
+</div>
+<footer><span>Najot Ta'lim maktabi · Choraklik baholash</span><span>${e(label)} · E'tibor kerak ro'yxati</span></footer>
+</div>
+</div></body></html>`;
+    return { html, fileTitle };
+  }
+
+  window.__buildReport = build;
+  window.__buildRisk = buildRisk;
+
+  const current = () => [[...(window.CN ? window.CN.sinflar : [])], [...(window.CN ? window.CN.fanlar : [])]];
+  window.__downloadPdf = () => printHtml(build(window.__DATA.oquvchilar, ...current()));
+  window.__downloadRiskPdf = () => printHtml(buildRisk(window.__DATA.oquvchilar, ...current()));
+
+  function printHtml({ html, fileTitle }) {
     document.querySelectorAll('iframe.cn-print').forEach((f) => f.remove());
     const f = document.createElement('iframe');
     f.className = 'cn-print';
@@ -842,10 +938,11 @@ ${heat}
       setTimeout(() => { document.title = old; }, 1000);
     };
     (doc.fonts && doc.fonts.ready ? doc.fonts.ready : Promise.resolve()).then(() => setTimeout(go, 150));
-  };
+  }
 })();
 
   document.getElementById('cn-pdf').addEventListener('click', () => window.__downloadPdf());
+  document.getElementById('cn-risk-pdf').addEventListener('click', () => window.__downloadRiskPdf());
   window.__runAll();
 </script>
 </body>

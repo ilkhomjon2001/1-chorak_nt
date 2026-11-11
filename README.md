@@ -4,10 +4,11 @@
 
 `index.html` — mustaqil fayl: ma'lumot, grafiklar va shriftlar ichida, internetsiz ham ochiladi.
 
-- Sinflarni bir yoki bir nechtasini tanlash
+- Sinflarni va fanlarni bir yoki bir nechtasini tanlash (o'rtacha tanlangan fanlar bo'yicha hisoblanadi)
 - Umumiy ko'rsatkichlar, fanlar va baho darajalari, sinf × fan jadvali
 - "E'tibor kerak" ro'yxati (kamida 3 ta fandan 55 va past)
 - O'quvchi kartochkasi, saralanadigan jadval, ismlarni yashirish
-- Tanlangan sinflar bo'yicha A4 PDF hisobot ("PDF yuklab olish" → "Save as PDF")
+- Tanlangan sinflar va fanlar bo'yicha A4 PDF hisobot ("PDF yuklab olish" → "Save as PDF")
+- "E'tibor kerak" ro'yxatini alohida PDF qilib yuklab olish ("Izoh" ustuni bilan)
 
 O'rtacha ballar yuqoriga yaxlitlanadi (85,1 → 86). Baholash: 86–100 → 5, 71–85 → 4, 56–70 → 3, 0–55 → 2.
