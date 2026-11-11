@@ -4,6 +4,8 @@
 
 `index.html` — mustaqil fayl: ma'lumot, grafiklar va shriftlar ichida, internetsiz ham ochiladi.
 
+- Grafik ustunlari, sinf × fan kataklari va A'lo/Qoniqarsiz kartochkalarini bosib shu guruhdagi o'quvchilar ro'yxatini ochish
+- Najot Ta'lim uslubi (logo, bordo va oltin ranglar, Inter shrifti), ota-onalar uchun
 - Sinflarni va fanlarni bir yoki bir nechtasini tanlash (o'rtacha tanlangan fanlar bo'yicha hisoblanadi)
 - Umumiy ko'rsatkichlar, fanlar va baho darajalari, sinf × fan jadvali
 - "E'tibor kerak" ro'yxati (kamida 3 ta fandan 55 va past)
