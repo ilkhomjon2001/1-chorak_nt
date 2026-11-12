@@ -13,4 +13,6 @@
 - Tanlangan sinflar va fanlar bo'yicha A4 PDF hisobot ("PDF yuklab olish" → "Save as PDF")
 - "E'tibor kerak" ro'yxatini alohida PDF qilib yuklab olish ("Izoh" ustuni bilan)
 
+0 ball — imtihonga qatnashmagan: o'rtachaga va darajalarga kirmaydi, «Qayta topshirishi kerak» ro'yxatida ko'rsatiladi. Qatnashmagan o'quvchilar alohida bo'limda.
+
 O'rtacha ballar yuqoriga yaxlitlanadi (85,1 → 86). Baholash: 86–100 → 5, 71–85 → 4, 56–70 → 3, 0–55 → 2.
