@@ -1,6 +1,6 @@
 # 1-chorak natijalari — dashboard
 
-2026–2027 o'quv yili, I chorak (noyabr 2026) baholash natijalari: 2–9-sinflar, 4 fan (Ingliz tili, Matematika, Informatika, Ona tili).
+2026–2027 o'quv yili, I chorak baholash natijalari (12-noyabr 2026 holatiga): 2–9-sinflar, 4 fan (Ingliz tili, Matematika, Informatika, Ona tili).
 
 `index.html` — mustaqil fayl: ma'lumot, grafiklar va shriftlar ichida, internetsiz ham ochiladi.
 
