@@ -6,6 +6,7 @@
 
 - Grafik ustunlari, sinf × fan kataklari va A'lo/Qoniqarsiz kartochkalarini bosib shu guruhdagi o'quvchilar ro'yxatini ochish
 - Najot Ta'lim uslubi (logo, bordo va oltin ranglar, Inter shrifti), ota-onalar uchun
+- «Tutorlar» bo'limi: har bir tutor uchun Excel jurnal va PDF ro'yxatni yuklab olish (`tutorlar/` papkasi)
 - Sinflarni va fanlarni bir yoki bir nechtasini tanlash (o'rtacha tanlangan fanlar bo'yicha hisoblanadi)
 - Umumiy ko'rsatkichlar, fanlar va baho darajalari, sinf × fan jadvali
 - "E'tibor kerak" ro'yxati (kamida 3 ta fandan 55 va past)
